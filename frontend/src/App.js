@@ -9,7 +9,7 @@ function App() {
   const [error, setError] = useState(null);
 
   // URL del backend
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = 'http://localhost:5001/api';
 
   // Cargar items al iniciar
   useEffect(() => {

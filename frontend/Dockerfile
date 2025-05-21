@@ -8,9 +8,9 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 4000
+EXPOSE 4001
 
 # Configurar para que la aplicación se ejecute en el puerto 4000
-ENV PORT=4000
+ENV PORT=4001
 
 CMD ["npm", "start"]
