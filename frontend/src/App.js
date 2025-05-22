@@ -5,6 +5,7 @@ import './App.css';
 function App() {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({ name: '', description: '' });
+  const [editingItem, setEditingItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -37,19 +38,46 @@ function App() {
     setNewItem(prev => ({ ...prev, [name]: value }));
   };
 
-  // Enviar nuevo item
+  // Enviar nuevo item o actualizar existente
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newItem.name.trim()) return;
 
     try {
       setLoading(true);
-      await axios.post(`${API_URL}/items`, newItem);
+      if (editingItem) {
+        await axios.put(`${API_URL}/items/${editingItem._id}`, newItem);
+        setEditingItem(null);
+      } else {
+        await axios.post(`${API_URL}/items`, newItem);
+      }
       setNewItem({ name: '', description: '' });
       fetchItems();
     } catch (err) {
-      setError('Error al crear el item. Por favor, intente nuevamente.');
-      console.error('Error creating item:', err);
+      setError('Error al guardar el item. Por favor, intente nuevamente.');
+      console.error('Error saving item:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Iniciar edición de un item
+  const handleEdit = (item) => {
+    setEditingItem(item);
+    setNewItem({ name: item.name, description: item.description });
+  };
+
+  // Eliminar un item
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Está seguro de que desea eliminar este item?')) return;
+
+    try {
+      setLoading(true);
+      await axios.delete(`${API_URL}/items/${id}`);
+      fetchItems();
+    } catch (err) {
+      setError('Error al eliminar el item. Por favor, intente nuevamente.');
+      console.error('Error deleting item:', err);
     } finally {
       setLoading(false);
     }
@@ -63,7 +91,7 @@ function App() {
       
       <main>
         <section className="form-section">
-          <h2>Agregar Nuevo Item</h2>
+          <h2>{editingItem ? 'Editar Item' : 'Agregar Nuevo Item'}</h2>
           {error && <p className="error">{error}</p>}
           
           <form onSubmit={handleSubmit}>
@@ -90,8 +118,20 @@ function App() {
             </div>
             
             <button type="submit" disabled={loading}>
-              {loading ? 'Guardando...' : 'Guardar Item'}
+              {loading ? 'Guardando...' : (editingItem ? 'Actualizar Item' : 'Guardar Item')}
             </button>
+            {editingItem && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingItem(null);
+                  setNewItem({ name: '', description: '' });
+                }}
+                className="cancel-button"
+              >
+                Cancelar Edición
+              </button>
+            )}
           </form>
         </section>
         
@@ -106,6 +146,14 @@ function App() {
                   <h3>{item.name}</h3>
                   <p>{item.description}</p>
                   <small>Creado: {new Date(item.createdAt).toLocaleString()}</small>
+                  <div className="item-actions">
+                    <button onClick={() => handleEdit(item)} className="edit-button">
+                      Editar
+                    </button>
+                    <button onClick={() => handleDelete(item._id)} className="delete-button">
+                      Eliminar
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

@@ -57,6 +57,36 @@ app.post('/api/items', async (req, res) => {
   }
 });
 
+// Ruta para actualizar un item
+app.put('/api/items/:id', async (req, res) => {
+  try {
+    const item = await Item.findByIdAndUpdate(
+      req.params.id,
+      { name: req.body.name, description: req.body.description },
+      { new: true }
+    );
+    if (!item) {
+      return res.status(404).json({ message: 'Item no encontrado' });
+    }
+    res.json(item);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Ruta para eliminar un item
+app.delete('/api/items/:id', async (req, res) => {
+  try {
+    const item = await Item.findByIdAndDelete(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: 'Item no encontrado' });
+    }
+    res.json({ message: 'Item eliminado correctamente' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor backend ejecutándose en http://localhost:${PORT}`);
